@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+        }
+
+        #myCanvas {
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script>
+
+        /*过程：鼠标移动1次 -> 产生一个圆圈Circle -> 存入数组circleArr -> 通过定时器每次画一个新圆  -> 所有圆圈透明度很小的时候取消定时器 
+        *
+        */
+
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+        var timer = null;
+        var circleArr = [];
+        var move = true;
+        init();
+        bindEvent();
+        // 
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function bindEvent() {
+            // 鼠标移动产生圆圈
+            canvas.addEventListener('mousemove', moveEvent);
+            canvas.addEventListener('touchmove', moveEvent);
+
+            // 调整屏幕尺寸的时候，也要调整canvas尺寸
+            window.addEventListener('resize', function () {
+                init();
+            })
+        }
+
+        function moveEvent(e) {
+            var x = e.clientX || e.targetTouches[0].pageX;
+            var y = e.clientY || e.targetTouches[0].pageY;
+
+            var moveX = (Math.random() - 0.5) * 7;
+            var moveY = (Math.random() - 0.5) * 7;
+            var color = 'rgb(' + random(0, 256) + ',' + random(0, 256) + ',' + random(0, 256) + ')'
+            var circle = new Circle(x, y, color, moveX, moveY);
+            circle.draw();
+            circleArr.push(circle);
+            if (move) {
+                // 为了防止无止境的定时器
+                render();
+                move = false;
+            }
+        }
+
+        // 构造圆圈
+        function Circle(x, y, color, moveX, moveY) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.moveX = moveX;
+            this.moveY = moveY;
+            this.alpha = 1;
+        }
+        Circle.prototype = {
+            draw: function () {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                // 两个图片混在一起后出现的形状，lighter是综合颜色
+                ctx.globalCompositeOperation = 'lighter';
+                // 全局透明度
+                ctx.globalAlpha = this.alpha;
+                ctx.arc(this.x, this.y, 30, 0, Math.PI * 2, 0);
+                ctx.fill();
+                this.update();
+            },
+            update: function () {
+                this.x += this.moveX;
+                this.y += this.moveY;
+                this.alpha -= 0.01;
+            }
+        }
+
+        // 取两个数之间的随机数，用在color上
+        function random(min, max) {
+            return Math.floor((max - min) * Math.random() + min);
+        }
+
+        // 让圆圈运动起来
+        function render() {
+            timer = setInterval(function () {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                circleArr.forEach(function (ele, index) {
+                    ele.draw();
+                    if (ele.alpha < 0.1) {
+                        circleArr.splice(index, 1);
+                    }
+                })
+                if (circleArr.length == 0) {
+                    clearInterval(timer);
+                    move = true;
+                }
+                console.log('adad');
+            }, 30);
+        }
+
+
+
+    </script>
+</body>
+
+</html>
